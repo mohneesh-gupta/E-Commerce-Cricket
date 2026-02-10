@@ -47,6 +47,12 @@ service cloud.firestore {
       allow read, write: if isLoggedIn();
     }
     
+    // --- Coupons ---
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if isLoggedIn();
+    }
+
     // --- Abandoned Carts ---
     match /abandonedCarts/{userId} {
       allow write: if isOwner(userId);
