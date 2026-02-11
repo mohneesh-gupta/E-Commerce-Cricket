@@ -35,7 +35,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center p-4 py-8">
+    <div className="min-h-[calc(100vh-5rem)] bg-black relative overflow-hidden flex items-center justify-center p-4 py-8">
       {/* Animated Background Blobs */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] -mr-48 -mt-48 animate-pulse" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] -ml-48 -mb-48 animate-pulse" style={{ animationDelay: "1s" }} />

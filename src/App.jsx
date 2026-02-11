@@ -29,17 +29,10 @@ import ScrollToTop from "./components/ScrollToTop";
 
 // Layout Component to handle Route-Specific Styles
 const Layout = ({ children }) => {
-  const location = useLocation();
-
-  // Routes that have their own headers or don't need the global spacer
-  const noSpacerRoutes = ["/cart"];
-  const isNoSpacerRoute = noSpacerRoutes.includes(location.pathname);
-
   return (
     <>
       <Header />
-      {/* Conditionally apply padding-top only if NOT a noSpacerRoute */}
-      <div className="min-h-screen">
+      <div className="min-h-screen pt-20">
         {children}
       </div>
       <Footer />

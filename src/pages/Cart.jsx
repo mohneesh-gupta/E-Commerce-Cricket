@@ -29,10 +29,15 @@ const Cart = () => {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
+  // Modal state for delete confirmation
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [showClearCartModal, setShowClearCartModal] = useState(false);
+
   /* -------------------- LOADING -------------------- */
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-gray-50">
         <div className="animate-pulse flex flex-col items-center">
           <div className="w-12 h-12 bg-gray-300 rounded-full mb-4"></div>
           <div className="h-4 w-32 bg-gray-300 rounded"></div>
@@ -112,9 +117,41 @@ const Cart = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-[calc(100vh-5rem)] bg-gray-50 pb-20">
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <DeleteConfirmationModal
+            itemName={itemToDelete?.name}
+            onConfirm={() => {
+              removeFromCart(itemToDelete.id);
+              setShowDeleteModal(false);
+              setItemToDelete(null);
+            }}
+            onCancel={() => {
+              setShowDeleteModal(false);
+              setItemToDelete(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Clear Cart Confirmation Modal */}
+      <AnimatePresence>
+        {showClearCartModal && (
+          <DeleteConfirmationModal
+            itemName="all items"
+            onConfirm={() => {
+              clearCart();
+              setShowClearCartModal(false);
+            }}
+            onCancel={() => setShowClearCartModal(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Header / Nav */}
-      <div className="bg-white border-b sticky top-0 z-30 shadow-sm/50 backdrop-blur-md bg-white/80">
+      <div className="bg-white border-b shadow-sm/50 backdrop-blur-md bg-white/80">
         <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2 group">
             <div className="p-2 transition-colors group-hover:bg-gray-100 rounded-full">
@@ -134,7 +171,7 @@ const Cart = () => {
           <div className="flex justify-between items-end mb-4">
             <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Your Cart</h1>
             <button
-              onClick={clearCart}
+              onClick={() => setShowClearCartModal(true)}
               className="text-sm font-medium text-red-500 hover:text-red-700 hover:underline transition-colors"
             >
               Clear Cart
@@ -148,7 +185,10 @@ const Cart = () => {
                   key={item.id}
                   item={item}
                   updateQuantity={updateQuantity}
-                  removeFromCart={removeFromCart}
+                  onDeleteClick={(item) => {
+                    setItemToDelete(item);
+                    setShowDeleteModal(true);
+                  }}
                 />
               ))}
             </AnimatePresence>
@@ -262,10 +302,71 @@ const Cart = () => {
   );
 };
 
+/* -------------------- SUB COMPONENTS (confirm delete)-------------------- */
+
+const DeleteConfirmationModal = ({ itemName, onConfirm, onCancel }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    {/* Backdrop */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onCancel}
+      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+    />
+
+    {/* Modal */}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, y: 20 }}
+      transition={{ type: "spring", duration: 0.5 }}
+      className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden"
+    >
+      {/* Decorative gradient bar */}
+      <div className="h-2 bg-gradient-to-r from-red-500 via-orange-500 to-red-500" />
+
+      <div className="p-8">
+        {/* Icon */}
+        <div className="w-16 h-16 mx-auto mb-6 bg-red-50 rounded-full flex items-center justify-center">
+          <TrashIcon className="w-8 h-8 text-red-500" />
+        </div>
+
+        {/* Content */}
+        <div className="text-center mb-8">
+          <h3 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">
+            Remove Item?
+          </h3>
+          <p className="text-gray-600 font-medium leading-relaxed">
+            Are you sure you want to remove{" "}
+            <span className="font-black text-gray-900">{itemName}</span> from your cart?
+          </p>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-black uppercase tracking-wider text-xs transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-6 py-3.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-black uppercase tracking-wider text-xs transition-all shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  </div>
+);
+
 /* -------------------- SUB COMPONENTS -------------------- */
 
 const EmptyCart = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+  <div className="min-h-[calc(100vh-5rem)] flex flex-col items-center justify-center bg-white">
     <motion.div
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -286,11 +387,9 @@ const EmptyCart = () => (
   </div>
 );
 
-const CartItem = ({ item, updateQuantity, removeFromCart }) => {
-  const handleRemove = (id) => {
-    if (window.confirm("Are you sure you want to remove this item from your cart?")) {
-      removeFromCart(id);
-    }
+const CartItem = ({ item, updateQuantity, onDeleteClick }) => {
+  const handleRemove = () => {
+    onDeleteClick(item);
   };
 
   return (
@@ -320,7 +419,7 @@ const CartItem = ({ item, updateQuantity, removeFromCart }) => {
               </h3>
             </Link>
             <button
-              onClick={() => handleRemove(item.id)}
+              onClick={handleRemove}
               className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all"
             >
               <TrashIcon className="h-5 w-5" />

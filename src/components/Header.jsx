@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
@@ -19,6 +19,8 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // Removed isScrolled state
   const [showProfile, setShowProfile] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
   const { cartCount } = useCart();
   const { wishlist } = useWishlist();
@@ -26,10 +28,23 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Removed handleScroll and useEffect for scroll listener
+  // Scroll handler for navbar visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
 
-  // Hide header on checkout for less distraction (optional, but good UX)
-  if (location.pathname === "/cart") return null;
+      if (!isMenuOpen && currentScrollY > lastScrollY.current && currentScrollY > 100) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isMenuOpen]);
 
   const navItems = [
     { name: "Home", path: "/" },
@@ -44,7 +59,8 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 relative z-50">
+
+    <header className={`fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
 

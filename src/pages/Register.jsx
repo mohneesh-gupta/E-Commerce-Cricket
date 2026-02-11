@@ -47,7 +47,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center p-4 py-6">
+    <div className="min-h-[calc(100vh-5rem)] bg-black relative overflow-hidden flex items-center justify-center p-4 py-6">
       {/* Animated Background Blobs */}
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] -ml-48 -mt-48 animate-pulse" />
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] -mr-48 -mb-48 animate-pulse" style={{ animationDelay: "1s" }} />
@@ -184,12 +184,12 @@ const Register = () => {
                       <div
                         key={i}
                         className={`h-1.5 flex-1 rounded-full transition-all ${password.length > i * 2 + 2
-                            ? password.length >= 8
-                              ? "bg-green-500"
-                              : password.length >= 6
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
-                            : "bg-white/10"
+                          ? password.length >= 8
+                            ? "bg-green-500"
+                            : password.length >= 6
+                              ? "bg-yellow-500"
+                              : "bg-red-500"
+                          : "bg-white/10"
                           }`}
                       />
                     ))}
