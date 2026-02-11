@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
+import toast from "react-hot-toast";
 
 const Profile = () => {
     const { currentUser } = useAuth();
@@ -54,10 +55,10 @@ const Profile = () => {
                 address: formData.address,
                 updatedAt: new Date(),
             });
-            alert("Profile updated successfully!");
+            toast.success("Profile updated successfully!");
         } catch (error) {
             console.error("Error saving profile:", error);
-            alert("Failed to save profile.");
+            toast.error("Failed to save profile.");
         } finally {
             setSaving(false);
         }

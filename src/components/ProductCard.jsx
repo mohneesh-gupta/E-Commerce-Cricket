@@ -42,10 +42,8 @@ const ProductCard = ({ product }) => {
     try {
       if (wishlisted) {
         await removeFromWishlist(product.id);
-        toast.success("Removed from wishlist");
       } else {
         await addToWishlist(product);
-        toast.success("Added to wishlist");
       }
     } catch (err) {
       toast.error(err.message || "Something went wrong");

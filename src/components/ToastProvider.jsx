@@ -2,7 +2,7 @@ import { Toaster } from 'react-hot-toast';
 
 export const ToastProvider = () => (
     <Toaster
-        position="top-center"
+        position="top-right"
         reverseOrder={false}
         gutter={8}
         containerClassName=""

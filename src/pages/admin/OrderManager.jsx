@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { collection, query, orderBy, getDocs, updateDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase/config";
+import toast from "react-hot-toast";
 
 const OrderManager = () => {
   const [orders, setOrders] = useState([]);
@@ -35,9 +36,10 @@ const OrderManager = () => {
 
       // Update local state
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      toast.success(`Order status updated to ${newStatus}`);
     } catch (error) {
       console.error("Update failed", error);
-      alert("Failed to update status");
+      toast.error("Failed to update status");
     }
   };
 
@@ -92,9 +94,9 @@ const OrderManager = () => {
                   </td>
                   <td className="p-4">
                     <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                        order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
-                          order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                            'bg-yellow-100 text-yellow-700'
+                      order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
+                        order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
                       }`}>
                       {order.status}
                     </span>

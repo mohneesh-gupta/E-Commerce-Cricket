@@ -8,6 +8,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import toast from "react-hot-toast";
 
 const AuthContext = createContext();
 
@@ -52,8 +53,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const res = await signInWithEmailAndPassword(auth, email, password);
+      toast.success("Logged in successfully!");
       return { success: true, user: res.user };
     } catch (err) {
+      toast.error("Invalid email or password");
       return { success: false, error: "Invalid email or password" };
     }
   };
@@ -62,8 +65,10 @@ export const AuthProvider = ({ children }) => {
   const register = async (email, password) => {
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
+      toast.success("Account created successfully!");
       return { success: true, user: res.user };
     } catch (err) {
+      toast.error(err.message);
       return { success: false, error: err.message };
     }
   };
@@ -71,6 +76,7 @@ export const AuthProvider = ({ children }) => {
   // ✅ Logout
   const logout = async () => {
     await signOut(auth);
+    toast.success("Logged out successfully!");
   };
 
   const value = {

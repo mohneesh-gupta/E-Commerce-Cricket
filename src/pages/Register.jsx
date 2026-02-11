@@ -25,7 +25,6 @@ const Register = () => {
       const res = await register(email, password);
       if (res.success) {
         navigate("/");
-        toast.success("Account created successfully!");
       } else {
         setError(res.error);
         toast.error(res.error);

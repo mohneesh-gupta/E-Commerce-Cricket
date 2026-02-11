@@ -9,6 +9,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "firebase/firestore";
+import toast from "react-hot-toast";
 
 const WishlistContext = createContext();
 
@@ -55,6 +56,7 @@ export const WishlistProvider = ({ children }) => {
         createdAt: serverTimestamp(),
       }
     );
+    toast.success(`${product.name} added to wishlist`);
   };
 
   // ❌ REMOVE FROM WISHLIST
@@ -64,6 +66,7 @@ export const WishlistProvider = ({ children }) => {
     await deleteDoc(
       doc(db, "users", currentUser.uid, "wishlist", productId)
     );
+    toast.success("Item removed from wishlist");
   };
 
   // 🔍 CHECK

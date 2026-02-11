@@ -16,7 +16,6 @@ const Wishlist = () => {
             image: product.image
         });
         await removeFromWishlist(product.productId);
-        alert("Moved to Cart!");
     };
 
     if (loading) {

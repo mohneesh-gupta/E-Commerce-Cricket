@@ -118,7 +118,6 @@ const ProductDetail = () => {
     try {
       if (isWishlisted(id)) {
         await removeFromWishlist(id);
-        toast.success("Removed from wishlist");
       } else {
         await addToWishlist({
           id: product.id,
@@ -126,7 +125,6 @@ const ProductDetail = () => {
           price: product.price,
           image: product.image || product.images?.[0] || "",
         });
-        toast.success("Added to wishlist");
       }
     } catch (e) {
       toast.error("Wishlist update failed");

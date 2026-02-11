@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   getDoc,
 } from "firebase/firestore";
+import toast from "react-hot-toast";
 
 const CartContext = createContext();
 export const useCart = () => useContext(CartContext);
@@ -26,10 +27,10 @@ export const CartProvider = ({ children }) => {
       const guest = localStorage.getItem("guest-cart");
       if (guest) {
         try {
-            setCartItems(JSON.parse(guest));
+          setCartItems(JSON.parse(guest));
         } catch (e) {
-            console.error("Failed to parse guest cart", e);
-            setCartItems([]);
+          console.error("Failed to parse guest cart", e);
+          setCartItems([]);
         }
       } else {
         setCartItems([]);
@@ -69,10 +70,10 @@ export const CartProvider = ({ children }) => {
       const guest = guestStr ? JSON.parse(guestStr) : [];
 
       if (guest.length > 0) {
-          for (const item of guest) {
-            await addToCart(item, item.quantity);
-          }
-          localStorage.removeItem("guest-cart");
+        for (const item of guest) {
+          await addToCart(item, item.quantity);
+        }
+        localStorage.removeItem("guest-cart");
       }
     };
 
@@ -82,26 +83,28 @@ export const CartProvider = ({ children }) => {
   /* ➕ ADD / INCREMENT */
   const addToCart = async (product, qty = 1) => {
     if (!currentUser) {
-        // Handle Guest Add
-        setCartItems(prev => {
-            const existing = prev.find(p => p.productId === product.id || p.id === product.id);
-            if (existing) {
-                return prev.map(p => (p.productId === product.id || p.id === product.id)
-                    ? { ...p, quantity: p.quantity + qty }
-                    : p
-                );
-            }
-            return [...prev, {
-                id: product.id,
-                productId: product.id,
-                name: product.name,
-                price: product.price,
-                image: product.image || product.images?.[0] || "",
-                quantity: qty,
-                updatedAt: new Date().toISOString()
-            }];
-        });
-        return;
+      // Handle Guest Add
+      setCartItems(prev => {
+        const existing = prev.find(p => p.productId === product.id || p.id === product.id);
+        if (existing) {
+          toast.success(`Updated ${product.name} quantity`);
+          return prev.map(p => (p.productId === product.id || p.id === product.id)
+            ? { ...p, quantity: p.quantity + qty }
+            : p
+          );
+        }
+        toast.success(`${product.name} added to cart`);
+        return [...prev, {
+          id: product.id,
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image || product.images?.[0] || "",
+          quantity: qty,
+          updatedAt: new Date().toISOString()
+        }];
+      });
+      return;
     }
 
     if (!product?.id) {
@@ -125,15 +128,18 @@ export const CartProvider = ({ children }) => {
       },
       { merge: true }
     );
+    toast.success(`${product.name} added to cart`);
   };
 
   /* ❌ REMOVE */
   const removeFromCart = async (productId) => {
     if (!currentUser) {
-        setCartItems(prev => prev.filter(item => item.id !== productId && item.productId !== productId));
-        return;
+      setCartItems(prev => prev.filter(item => item.id !== productId && item.productId !== productId));
+      toast.success("Item removed from cart");
+      return;
     }
     await deleteDoc(doc(db, "users", currentUser.uid, "cart", productId));
+    toast.success("Item removed from cart");
   };
 
   /* 🔁 UPDATE QTY */
@@ -141,10 +147,10 @@ export const CartProvider = ({ children }) => {
     if (quantity <= 0) return removeFromCart(productId);
 
     if (!currentUser) {
-        setCartItems(prev => prev.map(item =>
-            (item.id === productId || item.productId === productId) ? { ...item, quantity } : item
-        ));
-        return;
+      setCartItems(prev => prev.map(item =>
+        (item.id === productId || item.productId === productId) ? { ...item, quantity } : item
+      ));
+      return;
     }
 
     await setDoc(
@@ -157,14 +163,16 @@ export const CartProvider = ({ children }) => {
   /* 🧹 CLEAR */
   const clearCart = async () => {
     if (!currentUser) {
-        setCartItems([]);
-        return;
+      setCartItems([]);
+      toast.success("Cart cleared");
+      return;
     }
     await Promise.all(
       cartItems.map((item) =>
         deleteDoc(doc(db, "users", currentUser.uid, "cart", item.id))
       )
     );
+    toast.success("Cart cleared");
   };
 
   /* 💤 ABANDONED CART TRACK */
