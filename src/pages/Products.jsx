@@ -26,6 +26,8 @@ const getCategoryIcon = (category) => {
   return <Package size={18} />;
 };
 
+const PRODUCTS_PER_PAGE = 12;
+
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([{ id: "all", label: "All Gear", icon: <Package size={18} /> }]);
@@ -33,6 +35,7 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [filters, setFilters] = useState({
     category: "all",
@@ -102,8 +105,20 @@ const Products = () => {
     setFiltered(list);
   }, [filters, products, searchQuery]);
 
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, searchQuery]);
+
   const changeFilter = (key, value) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
+  const paginatedProducts = filtered.slice(
+    (currentPage - 1) * PRODUCTS_PER_PAGE,
+    currentPage * PRODUCTS_PER_PAGE
+  );
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -269,7 +284,43 @@ const Products = () => {
             ))}
           </div>
         ) : (
-          <ProductGrid products={filtered} />
+          <>
+            <ProductGrid products={paginatedProducts} />
+
+            {/* PAGINATION */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center mt-12 gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  ← Previous
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className={`w-10 h-10 text-sm font-bold rounded-xl transition ${currentPage === page
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200"
+                      : "border border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+                      }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

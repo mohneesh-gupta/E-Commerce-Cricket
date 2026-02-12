@@ -85,13 +85,29 @@ const OrderHistory = () => {
                             <div className="flex items-center gap-3">
                                 <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
                                     order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
-                                        'bg-yellow-100 text-yellow-700'
+                                        order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                            'bg-yellow-100 text-yellow-700'
                                     }`}>
                                     {order.status}
                                 </span>
                                 <p className="text-xs text-gray-400 font-mono">#{order.orderId ? order.orderId.slice(0, 8) : order.id.slice(0, 8)}</p>
                             </div>
                         </div>
+
+                        {/* SHIPPING ADDRESS */}
+                        {order.shippingAddress && (
+                            <div className="px-6 py-4 bg-blue-50/40 border-b border-gray-100">
+                                <p className="font-bold text-gray-500 uppercase text-xs mb-2">📍 Delivery Address</p>
+                                <div className="text-sm text-gray-700">
+                                    <p className="font-semibold text-gray-900">{order.shippingAddress.fullName}</p>
+                                    <p>{order.shippingAddress.addressLine}</p>
+                                    <p>{order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}</p>
+                                    {order.shippingAddress.phone && (
+                                        <p className="mt-1 text-gray-500">📞 {order.shippingAddress.phone}</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* BODY */}
                         <div className="p-6">
@@ -105,7 +121,6 @@ const OrderHistory = () => {
                                             </Link>
                                             <p className="text-sm text-gray-500">Qty: {item.quantity} × ₹{item.price}</p>
                                         </div>
-                                        {/* Optional: Add "Write Review" button here if delivered */}
                                     </div>
                                 ))}
                             </div>

@@ -11,6 +11,7 @@ import ProductManager from "./ProductManager";
 import OrderManager from "./OrderManager";
 import AdminAnalytics from "./AdminAnalytics";
 import CouponManager from "./CouponManager";
+import UserManager from "./UserManager";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -77,7 +78,7 @@ const Dashboard = () => {
         {activeTab === "products" && <ProductManager />}
         {activeTab === "orders" && <OrderManager />}
         {activeTab === "analytics" && <AdminAnalytics />}
-        {activeTab === "users" && <UsersPanel />}
+        {activeTab === "users" && <UserManager />}
         {activeTab === "coupons" && <CouponManager />}
       </main>
     </div>
@@ -88,8 +89,8 @@ const MenuItem = ({ icon, label, active, onClick }) => (
   <button
     onClick={onClick}
     className={`flex items-center gap-3 px-4 py-2 rounded-lg w-full text-left ${active
-        ? "bg-blue-600 text-white"
-        : "hover:bg-gray-100 text-gray-700"
+      ? "bg-blue-600 text-white"
+      : "hover:bg-gray-100 text-gray-700"
       }`}
   >
     {icon}
@@ -98,13 +99,3 @@ const MenuItem = ({ icon, label, active, onClick }) => (
 );
 
 export default Dashboard;
-
-/* ---------------- USERS PANEL ---------------- */
-const UsersPanel = () => (
-  <div className="bg-white p-6 rounded-lg shadow">
-    <h2 className="text-xl font-bold mb-2">Users</h2>
-    <p className="text-gray-600">
-      User management coming soon (view, block, roles).
-    </p>
-  </div>
-);

@@ -55,10 +55,10 @@ const Footer = () => {
               <div className="bg-blue-600 p-2 rounded-lg group-hover:bg-blue-500 transition-colors">
                 <GiCricketBat className="text-2xl text-white" />
               </div>
-              <span className="text-2xl font-bold text-white tracking-tight">Cricket<span className="text-blue-500">Pro</span></span>
+              <span className="text-2xl font-bold text-white tracking-tight">GS<span className="text-blue-500"> Sports</span></span>
             </Link>
             <p className="text-gray-400 leading-relaxed text-sm max-w-sm">
-              Your premier destination for professional cricket equipment. We provide world-class gear for champions at every level. Elevate your game today.
+              Your premier destination for professional cricket equipment & sports trophies. We provide world-class gear for champions at every level. Elevate your game with GS Sports.
             </p>
             <div className="flex gap-4 pt-2">
               {socialLinks.map((social, idx) => (
@@ -151,7 +151,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-3 text-sm">
                 <FaEnvelope className="text-blue-500 shrink-0" />
-                <span className="text-gray-400 hover:text-white transition-colors cursor-pointer">support@cricketpro.com</span>
+                <span className="text-gray-400 hover:text-white transition-colors cursor-pointer">support@gssports.com</span>
               </li>
             </ul>
           </div>
@@ -164,7 +164,7 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-500 text-sm text-center md:text-left">
-              &copy; {new Date().getFullYear()} CricketPro. All rights reserved. Designed with <span className="text-red-500">❤</span> for Cricket Lovers.
+              &copy; {new Date().getFullYear()} GS Sports. All rights reserved. Designed with <span className="text-red-500">❤</span> for Cricket Lovers.
             </p>
             <div className="flex items-center gap-3 text-2xl text-gray-500">
               <FaCcVisa className="hover:text-white transition-colors" />
