@@ -22,6 +22,23 @@ const Dashboard = () => {
   const { logout, currentUser } = useAuth();
   const navigate = useNavigate();
 
+  // Handle responsive sidebar state
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+
+    // Set initial state
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleLogout = async () => {
     await logout();
     navigate("/login");
@@ -36,11 +53,21 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen flex bg-gray-50 font-sans">
+    <div className="min-h-screen flex bg-gray-50 font-sans relative overflow-x-hidden">
+
+      {/* MOBILE BACKDROP */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-20 md:hidden transition-opacity"
+        />
+      )}
+
       {/* SIDEBAR */}
       <aside
-        className={`bg-white text-gray-800 transition-all duration-300 ease-in-out flex flex-col shadow-xl z-20 border-r border-gray-100
-          ${isSidebarOpen ? "w-64" : "w-20"} 
+        className={`bg-white text-gray-800 transition-all duration-300 ease-in-out flex flex-col shadow-xl z-30 border-r border-gray-100
+          fixed inset-y-0 left-0 md:relative md:translate-x-0
+          ${isSidebarOpen ? "translate-x-0 w-64" : "-translate-x-full md:w-20 md:translate-x-0"} 
         `}
       >
         <div className="p-6 flex items-center justify-between border-b border-gray-100 h-20">
@@ -51,6 +78,14 @@ const Dashboard = () => {
           ) : (
             <span className="text-2xl font-extrabold text-indigo-600 mx-auto">A</span>
           )}
+
+          {/* Mobile Close Button */}
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="md:hidden text-gray-500 hover:text-gray-700"
+          >
+            <FaBars />
+          </button>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -61,7 +96,11 @@ const Dashboard = () => {
               label={item.label}
               isSidebarOpen={isSidebarOpen}
               active={activeTab === item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                // Close sidebar on mobile when item clicked
+                if (window.innerWidth < 768) setIsSidebarOpen(false);
+              }}
             />
           ))}
 
@@ -82,9 +121,9 @@ const Dashboard = () => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden w-full">
         {/* TOP HEADER */}
-        <header className="bg-white shadow-sm h-20 flex items-center justify-between px-8 mx-6 mt-4 rounded-2xl z-10">
+        <header className="bg-white shadow-sm h-16 md:h-20 flex items-center justify-between px-4 md:px-8 mx-2 md:mx-6 mt-4 rounded-2xl z-10 shrink-0">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -92,8 +131,8 @@ const Dashboard = () => {
             >
               <FaBars className="h-5 w-5" />
             </button>
-            <h2 className="text-2xl font-bold text-gray-800 capitalize">
-              {activeTab} Management
+            <h2 className="text-lg md:text-2xl font-bold text-gray-800 capitalize truncate max-w-[150px] md:max-w-none">
+              {activeTab} Ops
             </h2>
           </div>
           <div className="flex items-center gap-4">
@@ -101,15 +140,15 @@ const Dashboard = () => {
               <p className="text-sm font-semibold text-gray-700">{currentUser?.displayName || "Admin User"}</p>
               <p className="text-xs text-gray-500">{currentUser?.email}</p>
             </div>
-            <div className="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold border-2 border-indigo-200">
+            <div className="h-8 w-8 md:h-10 md:w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold border-2 border-indigo-200">
               {currentUser?.email?.[0]?.toUpperCase() || "A"}
             </div>
           </div>
         </header>
 
         {/* DASHBOARD CONTENT AREA */}
-        <main className="flex-1 overflow-y-auto p-6 scrollbar-hide">
-          <div className="max-w-7xl mx-auto space-y-6 animate-fadeIn">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-hide">
+          <div className="max-w-7xl mx-auto space-y-6 animate-fadeIn pb-20 md:pb-0">
             {activeTab === "products" && <ProductManager />}
             {activeTab === "orders" && <OrderManager />}
             {activeTab === "analytics" && <AdminAnalytics />}

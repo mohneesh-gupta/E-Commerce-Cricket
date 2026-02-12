@@ -177,7 +177,7 @@ const Checkout = () => {
         <div className="lg:col-span-8 space-y-6">
 
           {/* STEP 1: ADDRESS */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <span className="bg-black text-white w-8 h-8 flex items-center justify-center rounded-full text-sm">1</span>
               Shipping Address
@@ -221,7 +221,7 @@ const Checkout = () => {
           </div>
 
           {/* STEP 2: SHIPPING METHOD */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <span className="bg-black text-white w-8 h-8 flex items-center justify-center rounded-full text-sm">2</span>
               Shipping Method
@@ -262,7 +262,7 @@ const Checkout = () => {
           </div>
 
           {/* STEP 3: PAYMENT */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <span className="bg-black text-white w-8 h-8 flex items-center justify-center rounded-full text-sm">3</span>
               Payment Method
@@ -287,7 +287,7 @@ const Checkout = () => {
 
         {/* RIGHT COLUMN - SUMMARY */}
         <div className="lg:col-span-4">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
+          <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
 
             <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2">

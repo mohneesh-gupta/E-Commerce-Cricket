@@ -398,7 +398,7 @@ const CartItem = ({ item, updateQuantity, onDeleteClick }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -50 }}
-      className="bg-white p-4 sm:p-6 rounded-3xl shadow-[0_2px_20px_rgb(0,0,0,0.04)] border border-gray-100 flex gap-6 group hover:border-gray-200 transition-colors"
+      className="bg-white p-3 sm:p-6 rounded-3xl shadow-[0_2px_20px_rgb(0,0,0,0.04)] border border-gray-100 flex gap-3 sm:gap-6 group hover:border-gray-200 transition-colors"
     >
       <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
         <Link to={`/product/${item.productId || item.id}`}>
@@ -455,7 +455,7 @@ const CartItem = ({ item, updateQuantity, onDeleteClick }) => {
           </div>
         </div>
       </div>
-    </motion.div>
+    </motion.div >
   );
 };
 

@@ -134,7 +134,7 @@ const CouponManager = () => {
             </form>
 
             {/* LIST */}
-            <div className="overflow-hidden border border-gray-200 rounded-xl">
+            <div className="overflow-x-auto border border-gray-200 rounded-xl">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
