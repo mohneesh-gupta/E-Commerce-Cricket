@@ -1,4 +1,3 @@
-// this file is for vercel deployment, to prevent error on reload
 {
     "rewrites": [
         {
