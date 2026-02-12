@@ -150,23 +150,12 @@ const Trophies = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest mb-6 border border-amber-100">
-              <Trophy size={14} />
-              Award Collection
-            </div>
             <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tighter mb-4">
               PREMIUM <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-yellow-600">TROPHIES</span>
             </h1>
             <p className="text-gray-500 max-w-2xl mx-auto text-lg font-medium">
               Celebrate victories with our handcrafted collection of premium trophies & awards for every occasion.
             </p>
-
-            {/* Breadcrumb */}
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-400 mt-6">
-              <Link to="/" className="hover:text-blue-600 transition">Home</Link>
-              <span>/</span>
-              <span className="text-gray-700 font-semibold">Trophies</span>
-            </div>
           </motion.div>
         </div>
       </div>
