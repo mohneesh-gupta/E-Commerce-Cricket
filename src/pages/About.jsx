@@ -6,19 +6,20 @@ const About = () => {
     return (
         <div className="min-h-screen bg-white">
             {/* HERO SECTION */}
-            <div className="relative bg-black text-white py-24 px-4 overflow-hidden">
-                <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1531415074968-0ea8863f3d5e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80')] bg-cover bg-center" />
-                <div className="relative max-w-7xl mx-auto text-center space-y-6">
-                    <motion.h1
+            <div className="bg-white border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
+                    <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-5xl md:text-7xl font-black uppercase tracking-tighter"
+                        className="text-center"
                     >
-                        We Are <span className="text-blue-500">GS Sports</span>
-                    </motion.h1>
-                    <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto font-light">
-                        Empowering cricketers with world-class gear to chase their dreams.
-                    </p>
+                        <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tighter mb-4">
+                            WE ARE <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">GS SPORTS</span>
+                        </h1>
+                        <p className="text-gray-500 max-w-2xl mx-auto text-lg font-medium">
+                            Empowering cricketers with world-class gear to chase their dreams.
+                        </p>
+                    </motion.div>
                 </div>
             </div>
 

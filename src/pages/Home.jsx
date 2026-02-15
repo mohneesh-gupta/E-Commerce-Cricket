@@ -52,10 +52,10 @@ const Hero = () => {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="inline-flex items-center gap-2 bg-blue-600/10 border border-blue-500/20 backdrop-blur-md px-4 py-2 rounded-full mb-8"
+            className="flex items-center gap-2 bg-blue-600/10 border border-blue-500/20 backdrop-blur-md px-4 py-2 rounded-full mb-8 w-fit"
           >
             <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-            <span className="text-blue-400 text-xs font-black uppercase tracking-[0.2em]">New Season Collection</span>
+            <span className="px-4 text-blue-400 text-xs font-black uppercase tracking-[0.2em]">New Season Collection</span>
           </motion.div>
 
           <h1 className="text-6xl md:text-8xl font-black text-white mb-6 leading-[0.9] tracking-tighter">

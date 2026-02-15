@@ -208,36 +208,6 @@ const Cart = () => {
                   <span>Subtotal</span>
                   <span className="font-medium text-gray-900">₹{subtotal.toFixed(2)}</span>
                 </div>
-
-                <div className="flex justify-between">
-                  <span>Shipping Estimate</span>
-                  {shipping === 0 ? (
-                    <span className="text-green-600 font-bold text-sm bg-green-50 px-2 py-1 rounded">FREE</span>
-                  ) : (
-                    <span className="font-medium text-gray-900">₹{shipping}</span>
-                  )}
-                </div>
-
-                {appliedCoupon && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Discount</span>
-                    <span>- ₹{couponDiscount.toFixed(2)}</span>
-                  </div>
-                )}
-
-                <div className="h-px bg-gray-100 my-4"></div>
-
-                {/* HIDDEN TOTAL AS REQUESTED */}
-                {/* <div className="flex justify-between items-end">
-                  <span className="font-bold text-lg text-gray-900">Total</span>
-                  <div className="text-right">
-                    <span className="block text-3xl font-extrabold text-gray-900">₹{finalTotal.toLocaleString()}</span>
-                    <span className="text-xs text-gray-400">Tax included</span>
-                  </div>
-                </div> */}
-                <div className="text-center text-sm text-gray-500 italic">
-                  Total will be calculated at checkout
-                </div>
               </div>
 
               <button

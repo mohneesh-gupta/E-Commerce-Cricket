@@ -38,12 +38,26 @@ const Contact = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-                <div className="text-center mb-16">
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight sm:text-5xl">Contact Us</h1>
-                    <p className="mt-4 text-xl text-gray-500">We'd love to hear from you. Get in touch!</p>
+        <div className="min-h-screen bg-gray-50/50">
+            {/* HEADER SECTION */}
+            <div className="bg-white border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center"
+                    >
+                        <h1 className="text-4xl md:text-6xl font-black text-gray-900 tracking-tighter mb-4">
+                            CONTACT <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">US</span>
+                        </h1>
+                        <p className="text-gray-500 max-w-2xl mx-auto text-lg font-medium">
+                            We'd love to hear from you. Get in touch!
+                        </p>
+                    </motion.div>
                 </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     {/* Contact Info */}

@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
 import ProductGrid from "../components/ProductGrid";
 import { db } from "../firebase/config";
 import { collection, onSnapshot } from "firebase/firestore";
 import {
   Trophy,
-  Filter,
   ArrowUpDown,
-  ChevronDown,
   Search,
   X,
   SlidersHorizontal,
@@ -17,8 +14,6 @@ import {
 const ITEMS_PER_PAGE = 12;
 
 const Trophies = () => {
-  const navigate = useNavigate();
-
   const [trophies, setTrophies] = useState([]);
   const [filteredTrophies, setFilteredTrophies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,23 +21,13 @@ const Trophies = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Filters state
   const [filters, setFilters] = useState({
-    priceRange: [0, 100000],
-    size: "all",
-    material: "all",
+    priceRange: [0, 10000000], // High max price to safeguard against hiding expensive items
     rating: 0,
     sortBy: "name",
     inStock: false,
   });
-
-  const trophySizes = [
-    "all",
-    "Small (Under 15cm)",
-    "Medium (15-25cm)",
-    "Large (Over 25cm)",
-  ];
-
-  const trophyMaterials = ["all", "Metal", "Wood", "Acrylic", "Crystal"];
 
   const sortOptions = [
     { value: "name", label: "Name (A-Z)" },
@@ -56,7 +41,7 @@ const Trophies = () => {
     const unsub = onSnapshot(collection(db, "products"), (snap) => {
       const list = snap.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }))
-        .filter((p) => p.category === "trophies");
+        .filter((p) => p.category && p.category.toLowerCase().includes("trophi"));
 
       setTrophies(list);
       setLoading(false);
@@ -67,50 +52,53 @@ const Trophies = () => {
 
   /* ---------------- FILTER LOGIC ---------------- */
   useEffect(() => {
-    let filtered = [...trophies];
+    let result = [...trophies];
 
-    if (filters.size !== "all") {
-      filtered = filtered.filter((t) => t.size === filters.size);
-    }
+    // 1. Price Range
+    result = result.filter((t) => {
+      const price = Number(t.price) || 0;
+      return price >= filters.priceRange[0] && price <= filters.priceRange[1];
+    });
 
-    if (filters.material !== "all") {
-      filtered = filtered.filter((t) => t.material === filters.material);
-    }
-
-    filtered = filtered.filter(
-      (t) =>
-        t.price >= filters.priceRange[0] &&
-        t.price <= filters.priceRange[1]
-    );
-
+    // 2. Rating
     if (filters.rating > 0) {
-      filtered = filtered.filter((t) => t.rating >= filters.rating);
+      result = result.filter((t) => (Number(t.rating) || 0) >= filters.rating);
     }
 
+    // 3. Stock
     if (filters.inStock) {
-      filtered = filtered.filter((t) => t.inStock);
+      result = result.filter((t) => t.stock > 0 || t.inStock === true);
     }
 
+    // 4. Search
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(
+      result = result.filter(
         (t) =>
           t.name?.toLowerCase().includes(q) ||
           t.description?.toLowerCase().includes(q)
       );
     }
 
-    filtered.sort((a, b) => {
-      if (filters.sortBy === "price-low") return a.price - b.price;
-      if (filters.sortBy === "price-high") return b.price - a.price;
-      if (filters.sortBy === "rating") return b.rating - a.rating;
-      return a.name.localeCompare(b.name);
+    // 5. Sort
+    result.sort((a, b) => {
+      const priceA = Number(a.price) || 0;
+      const priceB = Number(b.price) || 0;
+      const ratingA = Number(a.rating) || 0;
+      const ratingB = Number(b.rating) || 0;
+
+      switch (filters.sortBy) {
+        case "price-low": return priceA - priceB;
+        case "price-high": return priceB - priceA;
+        case "rating": return ratingB - ratingA;
+        case "name": default: return a.name.localeCompare(b.name);
+      }
     });
 
-    setFilteredTrophies(filtered);
+    setFilteredTrophies(result);
   }, [filters, trophies, searchQuery]);
 
-  // Reset page on filter/search change
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [filters, searchQuery]);
@@ -121,9 +109,7 @@ const Trophies = () => {
 
   const clearFilters = () => {
     setFilters({
-      priceRange: [0, 100000],
-      size: "all",
-      material: "all",
+      priceRange: [0, 10000000],
       rating: 0,
       sortBy: "name",
       inStock: false,
@@ -131,7 +117,7 @@ const Trophies = () => {
     setSearchQuery("");
   };
 
-  const hasActiveFilters = filters.size !== "all" || filters.material !== "all" || filters.rating > 0 || filters.inStock || searchQuery;
+  const hasActiveFilters = filters.rating > 0 || filters.inStock || searchQuery;
 
   // Pagination
   const totalPages = Math.ceil(filteredTrophies.length / ITEMS_PER_PAGE);
@@ -142,7 +128,7 @@ const Trophies = () => {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      {/* HERO HEADER */}
+      {/* HERO HEADER - Matches Products/About styling */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
           <motion.div
@@ -164,7 +150,7 @@ const Trophies = () => {
         {/* FILTER BAR */}
         <div className="bg-white p-2 rounded-3xl shadow-2xl shadow-gray-200/50 border border-gray-100 mb-12">
           <div className="flex flex-wrap md:flex-nowrap gap-2 items-center">
-            {/* Count & filter toggle */}
+            {/* Count */}
             <div className="flex items-center gap-2 p-1 pl-4">
               <div className="bg-amber-50 text-amber-700 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-widest border border-amber-100">
                 {filteredTrophies.length} Trophies
@@ -172,7 +158,7 @@ const Trophies = () => {
             </div>
 
             <div className="flex-1 flex items-center justify-end gap-2 p-1">
-              {/* Filters toggle */}
+              {/* Filter Button */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${showFilters
@@ -187,7 +173,7 @@ const Trophies = () => {
                 )}
               </button>
 
-              {/* Sort */}
+              {/* Sort Dropdown */}
               <div className="relative">
                 <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
                 <select
@@ -201,7 +187,7 @@ const Trophies = () => {
                 </select>
               </div>
 
-              {/* Search */}
+              {/* Search Input */}
               <div className="hidden md:block relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                 <input
@@ -238,47 +224,7 @@ const Trophies = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  {/* Size */}
-                  <div>
-                    <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">Size</h4>
-                    <div className="space-y-2">
-                      {trophySizes.map((s) => (
-                        <label key={s} className="flex items-center gap-2 text-sm cursor-pointer group">
-                          <input
-                            type="radio"
-                            checked={filters.size === s}
-                            onChange={() => handleFilterChange("size", s)}
-                            className="accent-amber-600"
-                          />
-                          <span className="text-gray-600 group-hover:text-amber-600 font-medium transition">
-                            {s === "all" ? "All Sizes" : s}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Material */}
-                  <div>
-                    <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">Material</h4>
-                    <div className="space-y-2">
-                      {trophyMaterials.map((m) => (
-                        <label key={m} className="flex items-center gap-2 text-sm cursor-pointer group">
-                          <input
-                            type="radio"
-                            checked={filters.material === m}
-                            onChange={() => handleFilterChange("material", m)}
-                            className="accent-amber-600"
-                          />
-                          <span className="text-gray-600 group-hover:text-amber-600 font-medium transition">
-                            {m === "all" ? "All Materials" : m}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Rating */}
                   <div>
                     <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">Min Rating</h4>
@@ -322,7 +268,7 @@ const Trophies = () => {
           )}
         </AnimatePresence>
 
-        {/* PRODUCT GRID */}
+        {/* LOADING & EMPTY STATES */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {[...Array(8)].map((_, i) => (
@@ -333,10 +279,6 @@ const Trophies = () => {
                 <div className="flex-1 bg-gray-100 rounded-xl mb-4" />
                 <div className="h-4 bg-gray-100 rounded w-2/3 mb-2" />
                 <div className="h-3 bg-gray-50 rounded w-1/2 mb-6" />
-                <div className="flex justify-between items-center">
-                  <div className="h-6 bg-gray-100 rounded w-20" />
-                  <div className="h-10 bg-gray-100 rounded w-24 rounded-xl" />
-                </div>
               </div>
             ))}
           </div>
@@ -356,6 +298,7 @@ const Trophies = () => {
           </div>
         ) : (
           <>
+            {/* GRID */}
             <ProductGrid products={paginatedTrophies} viewMode="grid" />
 
             {/* PAGINATION */}

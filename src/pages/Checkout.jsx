@@ -117,12 +117,9 @@ const Checkout = () => {
     try {
       // Use Transaction for Stock Update and Order Creation
       const orderRef = await runTransaction(db, async (transaction) => {
-        let validatedItems = [];
+        // STEP 1: Do ALL READS FIRST (Firestore transaction requirement)
+        const productSnapshots = [];
 
-        // Calculate final amount inside transaction to be safe (or just use state for now)
-        const orderTotal = finalTotal - discount;
-
-        // 1. Check and Update Stock for each item
         for (const item of itemsToPurchase) {
           const productId = item.id || item.productId;
           const productRef = doc(db, "products", productId);
@@ -132,17 +129,25 @@ const Checkout = () => {
             throw new Error(`Product ${item.name} does not exist!`);
           }
 
+          productSnapshots.push({
+            productSnap,
+            item,
+            productRef,
+            productId
+          });
+        }
+
+        // STEP 2: Validate stock for all products
+        const validatedItems = [];
+        const productUpdates = [];
+
+        for (const { productSnap, item, productRef, productId } of productSnapshots) {
           const productData = productSnap.data();
           const currentStock = productData.stock || 0;
 
           if (currentStock < item.quantity) {
             throw new Error(`Insufficient stock for ${item.name}. Available: ${currentStock}`);
           }
-
-          // Queue Stock Decrement
-          transaction.update(productRef, {
-            stock: increment(-item.quantity)
-          });
 
           validatedItems.push({
             productId: productId,
@@ -151,9 +156,22 @@ const Checkout = () => {
             quantity: item.quantity,
             image: item.image || item.images?.[0] || ""
           });
+
+          productUpdates.push({
+            ref: productRef,
+            quantity: item.quantity
+          });
         }
 
-        // 2. Prepare Order Data
+        // STEP 3: Now do ALL WRITES (after all reads are complete)
+        // Update stock for each product
+        for (const update of productUpdates) {
+          transaction.update(update.ref, {
+            stock: increment(-update.quantity)
+          });
+        }
+
+        // Prepare Order Data
         const orderData = {
           userId: currentUser.uid,
           items: validatedItems,
@@ -169,11 +187,11 @@ const Checkout = () => {
           createdAt: serverTimestamp(),
         };
 
-        // 3. Create Order Document
+        // Create Order Document
         const newOrderRef = doc(collection(db, "orders"));
         transaction.set(newOrderRef, orderData);
 
-        // 4. Add to User's Order History
+        // Add to User's Order History
         const userOrderRef = doc(collection(db, "users", currentUser.uid, "orders"));
         transaction.set(userOrderRef, {
           ...orderData,
@@ -189,8 +207,6 @@ const Checkout = () => {
       }
 
       // 5. Success
-      // Mock Payment Delay (could be before or after order creation depending on flow, 
-      // but here we keep it simple)
       await new Promise(resolve => setTimeout(resolve, 800));
 
       toast.success("Order Placed Successfully!");

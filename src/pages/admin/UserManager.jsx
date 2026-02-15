@@ -122,9 +122,9 @@ const UserManager = () => {
                                 <th className="p-4 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {paginatedUsers.map((user) => (
-                                <tr key={user.id} className="hover:bg-blue-50/50 transition-colors">
+                        <tbody>
+                            {paginatedUsers.map((user, index) => (
+                                <tr key={user.id} className="hover:bg-blue-50/50 transition-colors border-t-2 border-gray-200">
                                     <td className="p-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">

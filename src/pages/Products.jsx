@@ -6,7 +6,6 @@ import {
   ChevronDown,
   Search,
   LayoutGrid,
-  Trophy,
   Activity,
   Shield,
   Dribbble,
@@ -50,10 +49,13 @@ const Products = () => {
         id: doc.id,
         ...doc.data(),
       }));
-      setProducts(list);
+      setProducts(list.filter(p => !p.category?.toLowerCase().includes("trophi")));
 
       // Extract unique categories
-      const uniqueCats = ["all", ...new Set(list.map((p) => p.category).filter(Boolean))];
+      const uniqueCats = ["all", ...new Set(list
+        .filter(p => !p.category?.toLowerCase().includes("trophi"))
+        .map((p) => p.category)
+        .filter(Boolean))];
       const categoriesList = uniqueCats.map((cat) => ({
         id: cat,
         label: cat === "all" ? "All Gear" : cat.charAt(0).toUpperCase() + cat.slice(1),
@@ -144,7 +146,7 @@ const Products = () => {
         {/* INTERACTIVE CATEGORY BAR */}
         <div className="bg-white p-2 rounded-3xl shadow-2xl shadow-gray-200/50 border border-gray-100 mb-12">
           <div className="flex flex-wrap md:flex-nowrap gap-2">
-            <div className="flex-1 flex gap-2 overflow-x-auto p-1 scrollbar-hide">
+            <div className="flex-1 flex gap-2 overflow-x-auto p-1 pb-3 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
               {categories.map((cat) => (
                 <button
                   key={cat.id}

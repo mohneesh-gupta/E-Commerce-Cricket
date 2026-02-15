@@ -3,6 +3,7 @@ import { collection, query, orderBy, getDocs, updateDoc, doc, where, writeBatch 
 import { db } from "../../firebase/config";
 import toast from "react-hot-toast";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { getDirectImageUrl } from "../../utils/imageUtils";
 
 const OrderManager = () => {
   const [orders, setOrders] = useState([]);
@@ -15,7 +16,7 @@ const OrderManager = () => {
   const [showShipModal, setShowShipModal] = useState(false);
   const [shippingData, setShippingData] = useState({
     orderId: null,
-    deliveryPartner: "",
+    deliveryPartner: "Delhivery",
     awbId: ""
   });
 
@@ -38,7 +39,13 @@ const OrderManager = () => {
     fetchOrders();
   }, []);
 
-  const initiateStatusUpdate = (orderId, newStatus) => {
+  const initiateStatusUpdate = (orderId, newStatus, currentStatus) => {
+    // Prevent editing if delivered or cancelled
+    if (currentStatus === "delivered" || currentStatus === "cancelled") {
+      toast.error("Cannot modify completed or cancelled orders");
+      return;
+    }
+
     if (newStatus === "shipped") {
       setShippingData({ orderId, deliveryPartner: "Delhivery", awbId: "" });
       setShowShipModal(true);
@@ -48,21 +55,31 @@ const OrderManager = () => {
   };
 
   const updateOrderStatus = async (orderId, newStatus, additionalData = {}) => {
-    if (!window.confirm(`Update status to ${newStatus}?`)) return;
+    if (!window.confirm(`Update status to ${newStatus.toUpperCase()}?`)) return;
 
     try {
       const order = orders.find(o => o.id === orderId);
-      if (!order) return;
+      if (!order) {
+        toast.error("Order not found");
+        return;
+      }
 
       const batch = writeBatch(db);
 
-      // 1. Update global order
-      const orderRef = doc(db, "orders", orderId);
-      batch.update(orderRef, {
+      const updateData = {
         status: newStatus,
         ...additionalData,
-        ...(newStatus === "shipped" ? { shippedAt: new Date() } : {})
-      });
+      };
+
+      // Add timestamp for specific statuses
+      if (newStatus === "accepted") updateData.acceptedAt = new Date();
+      if (newStatus === "shipped") updateData.shippedAt = new Date();
+      if (newStatus === "delivered") updateData.deliveredAt = new Date();
+      if (newStatus === "cancelled") updateData.cancelledAt = new Date();
+
+      // 1. Update global order
+      const orderRef = doc(db, "orders", orderId);
+      batch.update(orderRef, updateData);
 
       // 2. Sync to user's order copy
       if (order.userId) {
@@ -71,23 +88,19 @@ const OrderManager = () => {
         const userOrderSnap = await getDocs(userOrderQuery);
 
         userOrderSnap.docs.forEach((docSnap) => {
-          batch.update(docSnap.ref, {
-            status: newStatus,
-            ...additionalData,
-            ...(newStatus === "shipped" ? { shippedAt: new Date() } : {})
-          });
+          batch.update(docSnap.ref, updateData);
         });
       }
 
       await batch.commit();
 
       // Update local state
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus, ...additionalData } : o));
-      toast.success(`Order status updated to ${newStatus}`);
+      setOrders(orders.map(o => o.id === orderId ? { ...o, ...updateData } : o));
+      toast.success(`Order marked as ${newStatus}`);
       setShowShipModal(false);
     } catch (error) {
-      console.error("Update failed", error);
-      toast.error("Failed to update status");
+      console.error("Update failed:", error);
+      toast.error(`Failed to update status: ${error.message}`);
     }
   };
 
@@ -180,6 +193,7 @@ const OrderManager = () => {
         >
           <option value="all">All Orders ({orders.length})</option>
           <option value="pending">Pending</option>
+          <option value="accepted">Accepted</option>
           <option value="shipped">Shipped</option>
           <option value="delivered">Delivered</option>
           <option value="cancelled">Cancelled</option>
@@ -198,11 +212,11 @@ const OrderManager = () => {
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {paginatedOrders.map(order => (
+            <tbody>
+              {paginatedOrders.map((order, index) => (
                 <React.Fragment key={order.id}>
                   <tr
-                    className="hover:bg-blue-50/50 transition-colors cursor-pointer"
+                    className="hover:bg-blue-50/50 transition-colors cursor-pointer border-t-2 border-gray-200"
                     onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
                   >
                     <td className="p-4">
@@ -222,19 +236,25 @@ const OrderManager = () => {
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
                         order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
-                          order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                            'bg-yellow-100 text-yellow-700'
+                          order.status === 'accepted' ? 'bg-indigo-100 text-indigo-700' :
+                            order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                              'bg-yellow-100 text-yellow-700'
                         }`}>
                         {order.status}
                       </span>
                     </td>
                     <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <select
-                        className="border border-gray-200 rounded px-2 py-1 text-xs font-bold text-gray-700 outline-none hover:border-gray-400 transition"
+                        className={`border border-gray-200 rounded px-2 py-1 text-xs font-bold outline-none transition ${order.status === 'delivered' || order.status === 'cancelled'
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'text-gray-700 hover:border-gray-400 cursor-pointer'
+                          }`}
                         value={order.status}
-                        onChange={(e) => initiateStatusUpdate(order.id, e.target.value)}
+                        onChange={(e) => initiateStatusUpdate(order.id, e.target.value, order.status)}
+                        disabled={order.status === 'delivered' || order.status === 'cancelled'}
                       >
                         <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
                         <option value="shipped">Shipped</option>
                         <option value="delivered">Delivered</option>
                         <option value="cancelled">Cancelled</option>
@@ -242,34 +262,84 @@ const OrderManager = () => {
                     </td>
                   </tr>
 
-                  {/* Expanded row - full address details */}
+                  {/* Expanded row - Order Items + Details */}
                   {expandedOrder === order.id && (
-                    <tr className="bg-blue-50/30">
-                      <td colSpan="5" className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="font-bold text-gray-500 uppercase text-xs mb-1">Full Address</p>
-                            <p className="text-gray-900">{order.shippingAddress?.addressLine}</p>
-                            <p className="text-gray-700">{order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}</p>
-                          </div>
-                          <div>
-                            <p className="font-bold text-gray-500 uppercase text-xs mb-1">Contact</p>
-                            <p className="text-gray-900">{order.shippingAddress?.fullName}</p>
-                            <p className="text-gray-700">📞 {order.shippingAddress?.phone}</p>
-                          </div>
-                          <div>
-                            <p className="font-bold text-gray-500 uppercase text-xs mb-1">Order Info</p>
-                            <p className="text-gray-700">Payment: {order.paymentMethod?.toUpperCase()}</p>
-                            <p className="text-gray-700">Shipping: {order.shippingMethod || "Standard"}</p>
-                            <p className="text-gray-700">Subtotal: ₹{order.subtotal} | Shipping: ₹{order.shippingCost || 0}</p>
-                            {order.deliveryPartner && (
-                              <div className="mt-2 text-blue-800 bg-blue-100 p-2 rounded">
-                                <p className="font-bold text-xs uppercase">Shipping Info</p>
-                                <p>{order.deliveryPartner} - {order.awbId}</p>
+                    <tr className="bg-blue-50/30 border-b-2 border-gray-200">
+                      <td colSpan="5" className="p-6">
+                        {/* ORDER ITEMS SECTION */}
+                        <div className="mb-6">
+                          <h3 className="font-bold text-gray-900 uppercase text-sm mb-4 flex items-center gap-2">
+                            <span className="text-blue-600">📦</span>
+                            Ordered Items ({order.items?.length || 0})
+                          </h3>
+                          <div className="bg-white rounded-xl p-4 space-y-3">
+                            {order.items?.map((item, idx) => (
+                              <div key={idx} className="flex gap-4 items-center p-3 rounded-lg hover:bg-gray-50 transition border border-gray-100">
+                                <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                  <img
+                                    src={getDirectImageUrl(item.image) || "https://placehold.co/100"}
+                                    className="w-full h-full object-cover"
+                                    alt={item.name}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-bold text-gray-900 line-clamp-1">{item.name}</p>
+                                  <div className="flex items-center gap-3 mt-1">
+                                    <p className="text-sm text-gray-600">Qty: <span className="font-bold text-gray-900">{item.quantity}</span></p>
+                                    <span className="text-gray-300">•</span>
+                                    <p className="text-sm text-gray-600">Price: <span className="font-bold text-gray-900">₹{item.price}</span></p>
+                                    <span className="text-gray-300">•</span>
+                                    <p className="text-sm font-bold text-blue-600">Total: ₹{item.price * item.quantity}</p>
+                                  </div>
+                                </div>
                               </div>
-                            )}
+                            ))}
                           </div>
                         </div>
+
+                        {/* ADDRESS AND CONTACT DETAILS */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <p className="font-bold text-gray-500 uppercase text-xs mb-2">📍 Full Address</p>
+                            <div className="bg-white rounded-lg p-3">
+                              <p className="text-gray-900 font-medium">{order.shippingAddress?.addressLine}</p>
+                              <p className="text-gray-700">{order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-500 uppercase text-xs mb-2">👤 Contact</p>
+                            <div className="bg-white rounded-lg p-3">
+                              <p className="text-gray-900 font-bold">{order.shippingAddress?.fullName}</p>
+                              <p className="text-gray-700">📞 {order.shippingAddress?.phone}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-500 uppercase text-xs mb-2">💳 Order Info</p>
+                            <div className="bg-white rounded-lg p-3">
+                              <p className="text-gray-700">Payment: <span className="font-bold">{order.paymentMethod?.toUpperCase()}</span></p>
+                              <p className="text-gray-700">Shipping: <span className="font-bold">{order.shippingMethod || "Standard"}</span></p>
+                              <p className="text-gray-700">Subtotal: <span className="font-bold">₹{order.subtotal}</span></p>
+                              {order.shippingCost > 0 && (
+                                <p className="text-gray-700">Shipping: <span className="font-bold">₹{order.shippingCost}</span></p>
+                              )}
+                              {order.deliveryPartner && (
+                                <div className="mt-2 text-blue-800 bg-blue-100 p-2 rounded">
+                                  <p className="font-bold text-xs uppercase">🚚 Shipping Info</p>
+                                  <p className="text-xs">{order.deliveryPartner} - {order.awbId}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* Separator row - only if not expanded */}
+                  {expandedOrder !== order.id && index < paginatedOrders.length - 1 && (
+                    <tr>
+                      <td colSpan="5" className="p-0">
+                        <div className="h-0.5 bg-gray-200"></div>
                       </td>
                     </tr>
                   )}

@@ -2,7 +2,7 @@ import { Toaster } from 'react-hot-toast';
 
 export const ToastProvider = () => (
     <Toaster
-        position="top-right"
+        position="bottom-right"
         reverseOrder={false}
         gutter={8}
         containerClassName=""
@@ -10,7 +10,7 @@ export const ToastProvider = () => (
         toastOptions={{
             // Define default options
             className: '',
-            duration: 3000,
+            duration: 2500,
             style: {
                 background: '#333',
                 color: '#fff',
