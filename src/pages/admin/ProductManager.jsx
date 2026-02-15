@@ -22,6 +22,7 @@ import {
   FaRupeeSign,
   FaList
 } from "react-icons/fa";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const CATEGORIES = [
   "Cricket Bats",
@@ -50,6 +51,15 @@ const ProductManager = () => {
     reviewsCount: 0,
     highlights: "",
     specs: "",
+  });
+
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    type: "danger"
   });
 
   const fetchProducts = async () => {
@@ -172,7 +182,16 @@ const ProductManager = () => {
   };
 
   const deleteProduct = async (id) => {
-    if (!window.confirm("Delete product?")) return;
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Product?",
+      message: "Are you sure you want to delete this product? This action cannot be undone.",
+      type: "danger",
+      onConfirm: () => performDelete(id)
+    });
+  };
+
+  const performDelete = async (id) => {
     await deleteDoc(doc(db, "products", id));
     fetchProducts();
   };
@@ -499,6 +518,16 @@ const ProductManager = () => {
           </table>
         </div>
       </div>
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+      />
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { db } from "../../firebase/config";
 import { Link } from "react-router-dom";
 import { UsersIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const UserManager = () => {
     const [users, setUsers] = useState([]);
@@ -11,6 +12,15 @@ const UserManager = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const USERS_PER_PAGE = 10;
+
+    // Confirm Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: "",
+        message: "",
+        onConfirm: null,
+        type: "info"
+    });
 
     const fetchUsers = async () => {
         try {
@@ -30,7 +40,16 @@ const UserManager = () => {
     }, []);
 
     const handleRoleChange = async (userId, newRole) => {
-        if (!window.confirm(`Change role to "${newRole}"?`)) return;
+        setConfirmModal({
+            isOpen: true,
+            title: "Change User Role?",
+            message: `Are you sure you want to change this user's role to "${newRole}"?`,
+            type: "info",
+            onConfirm: () => performRoleChange(userId, newRole)
+        });
+    };
+
+    const performRoleChange = async (userId, newRole) => {
         try {
             await updateDoc(doc(db, "users", userId), { role: newRole });
             setUsers(users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
@@ -220,6 +239,16 @@ const UserManager = () => {
                     </div>
                 )}
             </div>
+
+            {/* Confirm Modal */}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+            />
         </div>
     );
 };

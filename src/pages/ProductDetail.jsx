@@ -73,6 +73,11 @@ const ProductDetail = () => {
   }, [id, navigate]);
 
   const handleAddToCart = async () => {
+    if (product.stock <= 0) {
+      toast.error("This item is currently out of stock");
+      return;
+    }
+
     if (!currentUser) {
       return navigate("/login", { state: { from: `/product/${id}` } });
     }
@@ -92,6 +97,11 @@ const ProductDetail = () => {
   };
 
   const handleBuyNow = async () => {
+    if (product.stock <= 0) {
+      toast.error("This item is currently out of stock");
+      return;
+    }
+
     if (!currentUser) {
       return navigate("/login", { state: { from: `/product/${id}` } });
     }
@@ -240,7 +250,7 @@ const ProductDetail = () => {
                 </div>
               ) : (
                 <div className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-2xl font-black text-xs uppercase tracking-widest border border-red-100">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-red-600 rounded-full"></div>
                   Sold Out
                 </div>
               )}
@@ -267,15 +277,13 @@ const ProductDetail = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   onClick={handleAddToCart}
-                  className="w-full py-5 rounded-2xl border-2 border-blue-600 font-black text-xs uppercase tracking-widest text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-xl shadow-blue-200/50 active:scale-95 flex items-center justify-center gap-2"
-                  disabled={product.stock === 0}
+                  className={`w-full py-5 rounded-2xl border-2 font-black text-xs uppercase tracking-widest transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 ${product.stock === 0 ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50' : 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white shadow-blue-200/50'}`}
                 >
-                  <ShoppingBag size={18} /> Add To Bag
+                  <ShoppingBag size={18} /> {product.stock === 0 ? "Out of Stock" : "Add To Bag"}
                 </button>
                 <button
                   onClick={handleBuyNow}
-                  className="w-full py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs uppercase tracking-widest hover:from-blue-700 hover:to-indigo-700 transition-all shadow-2xl shadow-blue-200/50 active:scale-95"
-                  disabled={product.stock === 0}
+                  className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-2xl active:scale-95 ${product.stock === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-blue-200/50'}`}
                 >
                   Buy Now
                 </button>

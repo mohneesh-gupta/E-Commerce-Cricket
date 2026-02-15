@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { collection, query, orderBy, getDocs, updateDoc, doc, where, writeBatch } from "firebase/firestore";
+import { collection, query, orderBy, getDocs, updateDoc, doc, where, writeBatch, increment } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import toast from "react-hot-toast";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { getDirectImageUrl } from "../../utils/imageUtils";
+import ConfirmModal from "../../components/ConfirmModal";
+import { motion, AnimatePresence } from "framer-motion";
+import { Truck } from "lucide-react";
 
 const OrderManager = () => {
   const [orders, setOrders] = useState([]);
@@ -18,6 +21,15 @@ const OrderManager = () => {
     orderId: null,
     deliveryPartner: "Delhivery",
     awbId: ""
+  });
+
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    type: "warning"
   });
 
   const ORDERS_PER_PAGE = 10;
@@ -55,7 +67,16 @@ const OrderManager = () => {
   };
 
   const updateOrderStatus = async (orderId, newStatus, additionalData = {}) => {
-    if (!window.confirm(`Update status to ${newStatus.toUpperCase()}?`)) return;
+    setConfirmModal({
+      isOpen: true,
+      title: "Update Order Status?",
+      message: `Are you sure you want to change the status to ${newStatus.toUpperCase()}?`,
+      type: newStatus === "cancelled" ? "danger" : "warning",
+      onConfirm: () => performStatusUpdate(orderId, newStatus, additionalData)
+    });
+  };
+
+  const performStatusUpdate = async (orderId, newStatus, additionalData = {}) => {
 
     try {
       const order = orders.find(o => o.id === orderId);
@@ -76,6 +97,16 @@ const OrderManager = () => {
       if (newStatus === "shipped") updateData.shippedAt = new Date();
       if (newStatus === "delivered") updateData.deliveredAt = new Date();
       if (newStatus === "cancelled") updateData.cancelledAt = new Date();
+
+      // RESTORE STOCK when order is cancelled
+      if (newStatus === "cancelled" && order.items) {
+        for (const item of order.items) {
+          const productRef = doc(db, "products", item.productId);
+          batch.update(productRef, {
+            stock: increment(item.quantity) // Add back the quantity
+          });
+        }
+      }
 
       // 1. Update global order
       const orderRef = doc(db, "orders", orderId);
@@ -136,53 +167,101 @@ const OrderManager = () => {
     <div className="max-w-6xl mx-auto space-y-6 relative">
 
       {/* SHIPPING MODAL */}
-      {showShipModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scaleIn">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Mark as Shipped</h3>
-              <button onClick={() => setShowShipModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+      <AnimatePresence>
+        {showShipModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowShipModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", duration: 0.3 }}
+              className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-8"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowShipModal(false)}
+                className="absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
                 <XMarkIcon className="w-6 h-6 text-gray-400" />
               </button>
-            </div>
 
-            <form onSubmit={handleShipSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Delivery Partner</label>
-                <select
-                  className="w-full border border-gray-300 rounded-lg p-3 font-medium"
-                  value={shippingData.deliveryPartner}
-                  onChange={(e) => setShippingData({ ...shippingData, deliveryPartner: e.target.value })}
-                >
-                  <option value="Delhivery">Delhivery</option>
-                  <option value="BlueDart">BlueDart</option>
-                  <option value="DTDC">DTDC</option>
-                  <option value="XpressBees">XpressBees</option>
-                  <option value="Other">Other</option>
-                </select>
+              {/* Icon & Title */}
+              <div className="flex flex-col items-center mb-6">
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                  <Truck className="w-8 h-8 text-blue-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900">Mark as Shipped</h3>
+                <p className="text-center text-gray-500 mt-1">
+                  Enter shipping details to update order status
+                </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">AWB / Tracking ID</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-lg p-3 font-medium focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="e.g. 1234567890"
-                  value={shippingData.awbId}
-                  onChange={(e) => setShippingData({ ...shippingData, awbId: e.target.value })}
-                />
-              </div>
+              <form onSubmit={handleShipSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Delivery Partner</label>
+                  <div className="relative">
+                    <select
+                      className="w-full border border-gray-200 rounded-xl p-3.5 pl-4 pr-10 font-medium bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
+                      value={shippingData.deliveryPartner}
+                      onChange={(e) => setShippingData({ ...shippingData, deliveryPartner: e.target.value })}
+                    >
+                      <option value="Delhivery">Delhivery</option>
+                      <option value="BlueDart">BlueDart</option>
+                      <option value="DTDC">DTDC</option>
+                      <option value="XpressBees">XpressBees</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
 
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition"
-              >
-                Confirm Shipment
-              </button>
-            </form>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">AWB / Tracking ID</label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-200 rounded-xl p-3.5 font-medium bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400"
+                    placeholder="e.g. 1234567890"
+                    value={shippingData.awbId}
+                    onChange={(e) => setShippingData({ ...shippingData, awbId: e.target.value })}
+                    autoFocus
+                  />
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowShipModal(false)}
+                    className="flex-1 px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-all active:scale-95"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-blue-200"
+                  >
+                    Confirm Shipment
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h1 className="text-3xl font-bold text-gray-800">Order Management</h1>
@@ -393,6 +472,16 @@ const OrderManager = () => {
           </div>
         )}
       </div>
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+      />
     </div>
   );
 };

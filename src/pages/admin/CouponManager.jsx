@@ -10,6 +10,7 @@ import {
 import { db } from "../../firebase/config";
 import { TrashIcon, PlusIcon, TicketIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 const CouponManager = () => {
     const [coupons, setCoupons] = useState([]);
@@ -18,6 +19,15 @@ const CouponManager = () => {
         code: "",
         discount: "",
         name: "",
+    });
+
+    // Confirm Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: "",
+        message: "",
+        onConfirm: null,
+        type: "danger"
     });
 
     /* ---------------- FETCH COUPONS ---------------- */
@@ -67,7 +77,16 @@ const CouponManager = () => {
 
     /* ---------------- DELETE COUPON ---------------- */
     const handleDeleteCoupon = async (id) => {
-        if (!window.confirm("Delete this coupon?")) return;
+        setConfirmModal({
+            isOpen: true,
+            title: "Delete Coupon?",
+            message: "Are you sure you want to delete this coupon? This action cannot be undone.",
+            type: "danger",
+            onConfirm: () => performDeleteCoupon(id)
+        });
+    };
+
+    const performDeleteCoupon = async (id) => {
         try {
             setLoading(true);
             await deleteDoc(doc(db, "coupons", id));
@@ -172,6 +191,16 @@ const CouponManager = () => {
                     </tbody>
                 </table>
             </div>
+
+            {/* Confirm Modal */}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+            />
         </div>
     );
 };

@@ -114,7 +114,7 @@ const ProductCard = ({ product }) => {
             </span>
           )}
           {product.stock === 0 && (
-            <span className="bg-gray-400 text-white text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wider">
+            <span className="bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wider">
               Sold Out
             </span>
           )}
@@ -175,11 +175,15 @@ const ProductCard = ({ product }) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
+              if (product.stock <= 0) {
+                toast.error("This item is currently out of stock");
+                return;
+              }
               if (!currentUser) return navigate("/login", { state: { from: window.location.pathname } });
               addToCart({ ...product, quantity: 1 });
             }}
-            className="bg-blue-600 text-white p-2.5 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-blue-200/50"
-            disabled={product.stock === 0}
+            className={`p-2.5 rounded-xl transition-all shadow-xl shadow-blue-200/50 ${product.stock === 0 ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-blue-600 text-white hover:scale-105 active:scale-95"
+              }`}
           >
             <Plus size={18} />
           </button>
@@ -221,11 +225,17 @@ const ProductCard = ({ product }) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
+              if (product.stock <= 0) {
+                toast.error("This item is currently out of stock");
+                return;
+              }
               if (!currentUser) return navigate("/login", { state: { from: window.location.pathname } });
               navigate("/checkout", { state: { buyNowItem: { ...product, quantity: 1 } } });
             }}
-            className="flex items-center gap-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-xl transition-all duration-300 text-xs font-bold border border-blue-100"
-            disabled={product.stock === 0}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-xs font-bold border ${product.stock === 0
+                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                : "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border-blue-100"
+              }`}
           >
             <ShoppingBag size={14} /> Buy
           </button>
