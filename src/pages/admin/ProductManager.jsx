@@ -390,41 +390,77 @@ const ProductManager = () => {
             <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
               <FaImage className="text-indigo-500" /> Media
             </h2>
-            <div className="space-y-3">
-              <label className="text-sm text-gray-500">Image URLs (Google Drive / CDNs)</label>
-              {form.images.map((img, i) => (
-                <div key={i} className="flex gap-2">
-                  <input
-                    placeholder={`Image URL ${i + 1}`}
-                    className="flex-1 border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                    value={img}
-                    onChange={(e) => {
-                      const updated = [...form.images];
-                      updated[i] = e.target.value;
-                      setForm({ ...form, images: updated });
-                    }}
-                  />
-                  {form.images.length > 1 && (
+            <div className="space-y-4">
+              {/* Image Preview List */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                {form.images.filter(img => img).map((img, i) => (
+                  <div key={i} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                    <img src={img} alt="Product" className="w-full h-full object-cover" />
                     <button
                       type="button"
                       onClick={() => {
                         const updated = form.images.filter((_, idx) => idx !== i);
                         setForm({ ...form, images: updated });
                       }}
-                      className="text-red-500 hover:bg-red-50 p-2 rounded-lg"
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <FaTrash size={14} />
+                      <FaTimes size={12} />
                     </button>
-                  )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Upload Button */}
+              <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const files = Array.from(e.target.files);
+                    if (!files.length) return;
+
+                    const uploadToast = toast.loading(`Uploading ${files.length} image(s) to Cloudinary...`);
+
+                    try {
+                      const newImages = [...form.images.filter(Boolean)];
+                      let successCount = 0;
+
+                      for (const file of files) {
+                        try {
+                          const imageUrl = await uploadToCloudinary(file, {
+                            folder: 'products',
+                            tags: ['product', 'e-commerce']
+                          });
+                          newImages.push(imageUrl);
+                          successCount++;
+                        } catch (fileError) {
+                          console.error(`Error uploading ${file.name}:`, fileError);
+                          toast.error(`Failed to upload ${file.name}`);
+                        }
+                      }
+
+                      setForm({ ...form, images: newImages });
+                      toast.success(`${successCount} image(s) uploaded successfully`, { id: uploadToast });
+
+                    } catch (error) {
+                      console.error("General upload error:", error);
+                      toast.error("Error processing uploads", { id: uploadToast });
+                    }
+
+                    // Reset the input so the same file can be uploaded again if needed
+                    e.target.value = '';
+                  }}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <div className="flex flex-col items-center justify-center pointer-events-none">
+                  <FaPlus className="text-3xl text-indigo-300 mb-2" />
+                  <p className="text-sm font-bold text-gray-900">Click to Upload</p>
+                  <p className="text-xs text-gray-500">JPG, PNG, WebP supported</p>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, images: [...form.images, ""] })}
-                className="text-indigo-600 text-sm font-bold hover:underline flex items-center gap-1"
-              >
-                <FaPlus size={12} /> Add More Images
-              </button>
+              </div>
+
+              {/* Optional: Manual URL Input toggle could go here if needed, keeping it simple for now */}
             </div>
           </div>
 
