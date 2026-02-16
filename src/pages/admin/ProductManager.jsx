@@ -22,6 +22,8 @@ import {
   FaRupeeSign,
   FaList
 } from "react-icons/fa";
+import toast from "react-hot-toast";
+import { uploadToCloudinary } from "../../utils/cloudinary";
 import ConfirmModal from "../../components/ConfirmModal";
 
 const CATEGORIES = [
